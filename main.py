@@ -154,6 +154,29 @@ def crossover(children, p1, p2):
 
 def fitness(individual):
     pass
+
+
+def get_index_of_operation(individual, operation):
+    for i in range(individual[0]):
+        if operation == individual[0][i]:
+            return i
+
+
+def mutation(individual):
+    # biranje operacije
+    while True:
+        id = random.randint(0, len(individual[0]) - 1)
+        if get_dependent_op(id) != 0:
+            break
+
+    po = get_index_of_operation(individual, get_dependent_op(id))
+    x = random.randrange(po + 1, id)
+    # zamjena operacija
+    tmp = individual[id]
+    individual.remove(id)
+    individual.insert(x, tmp)
+
+
 def main():
     global op_machine
     global op_duration
