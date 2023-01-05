@@ -1,12 +1,11 @@
 import random
 import numpy as np
+from matplotlib import pyplot as plt
 
-PROBABILITY_LIST = [2, 1, 2, 2, 0, 0, 0, 0, 0, 0]
-
-SURVIVAL_RATE = 0.05
+SURVIVAL_RATE = 0.08
 MUTATION_RATE = 0.7
 CROSSOVER_RATE = 0.7
-NUM_OF_GENERATIONS = 1000
+NUM_OF_GENERATIONS = 600
 POPULATION_SIZE = 100
 NUM_OF_JOBS = 10
 NUM_OF_OPERATIONS_I = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
@@ -14,7 +13,9 @@ NUM_OF_MACHINES = 10
 LAST_OPERATIONS = []
 op_machine = []  # masine se oznacavaju od 1 pa nadalje
 op_duration = []
-
+colors = ["#494947", "#35ff69", "#44ccff", "#7494ea", "#d138bf", "#3891a6", "#4c5b5c", "#fde74c", "#db5461", "#e8969d",
+          "#95f9e3",
+          "#49d49d", "#558564", "#ea638c", "#b33c86", "#190e4f", "#03012c", "#002a22"]
 # cuvamo poslednje operacije svakog posla
 temp_op = 0
 for JOB in range(NUM_OF_JOBS):
@@ -77,6 +78,7 @@ def create_individual():
             individual[n] = [operation, op_machine[operation - 1][random.randrange(0, len(op_machine[operation - 1]))]]
             id.remove(n)
             operation += 1  # redom dodajemo operacije jednog posla na random izabrane id-jeve i cuvamo redoslijed
+    # print(fitness(individual))
     return individual
 
 
@@ -104,12 +106,13 @@ def crossover(children, p1, p2):
     # biranje crossover pointa i provjera da li zadovoljava uslove
     p1_prim = []
     p2_prim = []
-
+    total = get_total_operations()
     while True:
         fail = False
         checked = [False for _ in range(NUM_OF_JOBS)]
         point1 = random.randint(int(np.ceil(get_total_operations() / 2)), len(p1) - 2)
-        point2 = random.randint(point1, len(p1) - 1)
+        # point2 = random.randint(point1, len(p1) - 1)
+        point2 = random.randint(point1, len(p2) - 1 - (int((1 - CROSSOVER_RATE) * (len(p2) - point1))))
         sp1 = p1[point1:point2 + 1]
         for i in range(len(sp1) - 1, -1, -1):
             if sp1[i][0] in LAST_OPERATIONS:
@@ -157,21 +160,23 @@ def crossover(children, p1, p2):
             continue
 
     ###uniform crossover####
-    for op1 in p1_prim:
-        for op2 in p2_prim:
-            # ako je ista operacija
-            # mijenjamo masine
-            if op1[0] == op2[0]:
-                tmp = op1[1]
-                op1[1] = op2[1]
-                op2[1] = tmp
-                break
+    # for op1 in p1_prim:
+    #     for op2 in p2_prim:
+    #         # ako je ista operacija
+    #         # mijenjamo masine
+    #         if op1[0] == op2[0]:
+    #             tmp = op1[1]
+    #             op1[1] = op2[1]
+    #             op2[1] = tmp
+    #             break
 
     ####mutacija jedinke#####
     if random.random() <= MUTATION_RATE:
         mutation(p1_prim)
+    ## mutation(p1_prim)
     if random.random() <= MUTATION_RATE:
-        mutation(p1_prim)
+        mutation(p2_prim)
+    ## mutation(p2_prim)
 
     children.append(p1_prim)
     if len(children) == POPULATION_SIZE:
@@ -233,6 +238,59 @@ def mutation(individual):
     individual.insert(x, tmp)
 
 
+def generate_graph_data(individual):
+    machines = [[] for _ in range(NUM_OF_MACHINES)]
+    # vrijeme za svaku masinu
+    machines_available = [0] * NUM_OF_MACHINES
+
+    # vrijeme kada se naredna operacija posla moze izvrsiti
+    jobs_available = [0] * NUM_OF_JOBS
+
+    for op in individual:
+        job = get_job(op[0])
+        machine_time = machines_available[op[1] - 1]
+        job_time = jobs_available[job - 1]
+        start_time = 0
+
+        if machine_time > job_time:
+            start_time = machine_time
+        else:
+            start_time = job_time
+
+        machines[op[1] - 1].append(
+            (op[0], start_time, start_time + op_duration[op[0] - 1], op_duration[op[0] - 1]))
+
+        # vrijeme kada ce masina biti opet dostupna
+        machines_available[op[1] - 1] = start_time + op_duration[op[0] - 1]
+        # vrijeme kada ce se naredna operacija posla moci izvrsiti
+        jobs_available[job - 1] = start_time + op_duration[op[0] - 1]
+
+    return machines
+
+
+def generate_graph(data):
+    global colors
+    fig, ax = plt.subplots()
+    ax.set_ylim(0, NUM_OF_MACHINES * 10 + 15)
+    ax.set_xlim(0, 1500)
+    ax.set_xlabel("time")
+    ax.set_ylabel("machine")
+    y_height = 10
+    yticks = []
+    j = 15
+    for i in range(NUM_OF_MACHINES):
+        yticks.append(j)
+        j += y_height
+    ax.set_yticks(yticks)
+    ax.set_yticklabels(range(1, NUM_OF_MACHINES + 1))
+    mach = 0
+    for machine in data:
+        mach += 1
+        for op in machine:
+            ax.broken_barh([(op[1], op[3])], (y_height * mach, y_height - 1), facecolor=colors[get_job(op[0]) - 1])
+    plt.show()
+
+
 def main():
     global op_machine
     global op_duration
@@ -272,6 +330,10 @@ def main():
         print(population[0], fitness(population[0]))
 
     print(population[0], fitness(population[0]))
+    data = generate_graph_data(population[0])
+    for mach in data:
+        print(mach)
+    generate_graph(data)
 
 
 if __name__ == "__main__":
