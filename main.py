@@ -8,13 +8,13 @@ PROBABILITY_LIST = [2, 1, 2, 2, 0, 0, 0, 0, 0, 0]
 SURVIVAL_RATE = 0.1
 MUTATION_RATE = 0.2
 CROSSOVER_RATE = 0.7
-NUM_OF_GENERATIONS = 1000
+NUM_OF_GENERATIONS = 100
 POPULATION_SIZE = 100
 NUM_OF_JOBS = 10
 NUM_OF_OPERATIONS_I = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
 NUM_OF_MACHINES = 10
 LAST_OPERATIONS = []
-op_machine = []
+op_machine = []  # masine se oznacavaju od 1 pa nadalje
 op_duration = []
 
 # cuvamo poslednje operacije svakog posla
@@ -56,6 +56,15 @@ def get_dependent_op(operation):
     else:
         return operation - 1
 
+
+def get_index_of_operation(individual, operation):
+    i = 0
+    for op in individual:
+        if operation == op[0]:
+            return i
+        i += 1
+
+
 #################################################
 # operacije su u opsegu od 1 do ukupan broj operacija  [operacija,masina]
 def create_individual():
@@ -64,31 +73,35 @@ def create_individual():
     individual = [None] * op_total
     operation = 1
     for j in range(NUM_OF_JOBS):
-        ids = random.choices(id, k=NUM_OF_OPERATIONS_I[j])  # biramo j id-jeva i izbacujemo ih iz liste
-        id.remove(ids)
+        ids = random.sample(id, k=NUM_OF_OPERATIONS_I[j])  # biramo j id-jeva i izbacujemo ih iz liste
+        ids.sort()
         for n in ids:
             individual[n] = [operation, op_machine[operation - 1][random.randrange(0, len(op_machine[operation - 1]))]]
+            id.remove(n)
             operation += 1  # redom dodajemo operacije jednog posla na random izabrane id-jeve i cuvamo redoslijed
     return individual
 
 
-def generate_population(size):
+def generate_population():
     population = []
-    for i in range(size):
+    for i in range(POPULATION_SIZE):
         population.append(create_individual())
     return population
 
 
 def selection(population):
-    while True:
-        id1 = random.randint(0, len(population) - 1)
-        id2 = random.randint(0, len(population) - 1)
-        if id1 != id2:
-            break
+    population.sort(key=lambda x: fitness(x) * random.random())
 
-    return population[id1], population[id2]
+    # while True:
+    #     id1 = random.randint(0, len(population) - 1)
+    #     id2 = random.randint(0, len(population) - 1)
+    #     if id1 != id2:
+    #         break
+
+    return population[0], population[1]
 
 
+# uniform i order crossover
 def crossover(children, p1, p2):
     # biranje crossover pointa i provjera da li zadovoljava uslove
     p1_prim = None
@@ -97,22 +110,22 @@ def crossover(children, p1, p2):
     while True:
         fail = False
         checked = [False for _ in range(NUM_OF_JOBS)]
-        point1 = random.randint(int(np.ceil(get_total_operations() / 2)), len(p1[0]) - 2)
-        point2 = random.randint(point1, len(p1[0]) - 1)
+        point1 = random.randint(int(np.ceil(get_total_operations() / 2)), len(p1) - 2)
+        point2 = random.randint(point1, len(p1) - 1)
         sp1 = p1[point1:point2 + 1]
-        for op in range(len(sp1[0])-1, -1,  -1):
-            if sp1[0] in LAST_OPERATIONS:
-                checked[get_job(sp1[0])-1] = True
+        for i in range(len(sp1) - 1, -1, -1):
+            if sp1[i][0] in LAST_OPERATIONS:
+                checked[get_job(sp1[i][0]) - 1] = True
             else:
-                if not checked[get_job(sp1[0]) - 1]:
+                if not checked[get_job(sp1[i][0]) - 1]:
                     fail = True
                     break
         if not fail:
             p2_prim = p2[:]
             # brisanje operacija u p2 koje sadrzi p1 u dijelu od point1 do point2
             for id1 in range(point1, point2 + 1):
-                for id2 in range(len(p2_prim[0])):
-                    if p2_prim[0][id2] == p1[0][id1]:
+                for id2 in range(len(p2_prim)):
+                    if p2_prim[id2] == p1[id1]:
                         p2_prim.pop(id2)
                         break
             p2_prim += sp1
@@ -122,22 +135,22 @@ def crossover(children, p1, p2):
     while True:
         fail = False
         checked = [False for _ in range(NUM_OF_JOBS)]
-        point1 = random.randint(int(np.ceil(get_total_operations() / 2)), len(p2[0]) - 2)
-        point2 = random.randint(point1, len(p2[0]) - 1)
+        point1 = random.randint(int(np.ceil(get_total_operations() / 2)), len(p2) - 2)
+        point2 = random.randint(point1, len(p2) - 1)
         sp2 = p2[point1:point2 + 1]
-        for op in range(len(sp2[0])-1, -1,  -1):
-            if sp2[0] in LAST_OPERATIONS:
-                checked[get_job(sp2[0])-1] = True
+        for i in range(len(sp2) - 1, -1, -1):
+            if sp2[i][0] in LAST_OPERATIONS:
+                checked[get_job(sp2[i][0]) - 1] = True
             else:
-                if not checked[get_job(sp2[0]) - 1]:
+                if not checked[get_job(sp2[i][0]) - 1]:
                     fail = True
                     break
         if not fail:
             p1_prim = p1[:]
             # brisanje operacija u p2 koje sadrzi p1 u dijelu od point1 do point2
             for id1 in range(point1, point2 + 1):
-                for id2 in range(len(p1_prim[0])):
-                    if p1_prim[0][id2] == p2[0][id1]:
+                for id2 in range(len(p1_prim)):
+                    if p1_prim[id2] == p2[id1]:
                         p1_prim.pop(id2)
                         break
             p1_prim += sp2
@@ -145,35 +158,83 @@ def crossover(children, p1, p2):
         else:
             continue
 
+    ###uniform crossover####
+    for op1 in p1_prim:
+        for op2 in p2_prim:
+            # ako je ista operacija
+            # mijenjamo masine
+            if op1[0] == op2[0]:
+                tmp = op1[1]
+                op1[1] = op2[1]
+                op2[1] = tmp
+                break
+
+    ####mutacija jedinke#####
+    if random.random() <= MUTATION_RATE:
+        mutation(p1_prim)
+    if random.random() <= MUTATION_RATE:
+        mutation(p1_prim)
+
     children.append(p1_prim)
+    if len(children) == POPULATION_SIZE:
+        return p1_prim, p2_prim
+
     children.append(p2_prim)
     return p1_prim, p2_prim
     # for id1 in range(point1, point2 + 1):
     #     p2_prim.append(p1[0][id1])
 
 
+# fitness jedinke predstavlja vrijednost promjenljive end_time koja oznacava makespan
 def fitness(individual):
-    pass
+    global op_duration
 
+    # vrijeme kada je masina dostupna
+    machines_available = [0] * NUM_OF_MACHINES
+    # vrijeme kada se naredna operacija posla moze izvrsiti
+    jobs_available = [0] * NUM_OF_JOBS
 
-def get_index_of_operation(individual, operation):
-    for i in range(individual[0]):
-        if operation == individual[0][i]:
-            return i
+    end_time = 0  # vrijeme zavrsetka operacije koja se poslednja izvrsi-makespan
+    for op in individual:
+        job = get_job(op[0])
+        machine_time = machines_available[op[1] - 1]
+        job_time = jobs_available[job - 1]
+
+        start_time = 0
+        # vrijeme kada se operacija moze izvrsiti na masini
+        if machine_time > job_time:
+            start_time = machine_time
+        else:
+            start_time = job_time
+
+        # vrijeme kada ce masina biti opet dostupna
+        machines_available[op[1] - 1] = start_time + op_duration[op[0] - 1]
+        # vrijeme kada ce se naredna operacija posla moci izvrsiti
+        jobs_available[job - 1] = start_time + op_duration[op[0] - 1]
+
+        # ako je zavrsetak izvrsavanja operacije nakon end_time onda to postaje end_time
+        if (start_time + op_duration[op[0] - 1]) > end_time:
+            end_time = start_time + op_duration[op[0] - 1]
+
+    return end_time
 
 
 def mutation(individual):
+    id = 0
+    po = 0
+    x = 0
     # biranje operacije
     while True:
-        id = random.randint(0, len(individual[0]) - 1)
-        if get_dependent_op(id) != 0:
-            break
+        id = random.randint(0, len(individual) - 1)
+        if get_dependent_op(individual[id][0]) != 0:
+            po = get_index_of_operation(individual, get_dependent_op(individual[id][0]))
+            if (po + 1) != id:
+                x = random.randint(po + 1, id)
+                break
 
-    po = get_index_of_operation(individual, get_dependent_op(id))
-    x = random.randrange(po + 1, id)
     # zamjena operacija
     tmp = individual[id]
-    individual.remove(id)
+    individual.pop(id)
     individual.insert(x, tmp)
 
 
@@ -188,18 +249,25 @@ def main():
             data = new_line.split("  ")
             # print(data)
             for i in range(0, len(data), 2):
-                op_machine.append(int(data[i]))
+                op_machine.append([int(data[i]) + 1])
                 op_duration.append(int(data[i + 1]))
 
     # kreiranje pocetne populacije
     population = []
-    for i in range(POPULATION_SIZE):
-        print(i)
+    for _ in range(POPULATION_SIZE):
         individual = create_individual()
         population.append(individual)
 
-    for i in range(NUM_OF_GENERATIONS):
+    for _ in range(NUM_OF_GENERATIONS):
         new_population = []
+
+        # najbolje jedinke na pocetku liste
+        population.sort(key=lambda x: fitness(x))
+
+        # elitizam - najbolje jednike prezivljavaju
+        for i in range(int(POPULATION_SIZE * SURVIVAL_RATE)):
+            new_population.append(population[i])
+
         while True:
             parent1, parent2 = selection(population)
             crossover(new_population, parent1[:], parent2[:])
@@ -207,10 +275,10 @@ def main():
                 break
         population = new_population
 
-        for i in population:
-            print(i)
-        exit()
+    print(population[0], fitness(population[0]))
 
 
 if __name__ == "__main__":
     main()
+    # print(fitness([[1,2],[3,2],[2,3],[4,3]]))
+    # 2 3 4 1
