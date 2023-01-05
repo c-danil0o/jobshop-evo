@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 SURVIVAL_RATE = 0.08
 MUTATION_RATE = 0.7
 CROSSOVER_RATE = 0.7
-NUM_OF_GENERATIONS = 600
+NUM_OF_GENERATIONS = 6
 POPULATION_SIZE = 100
 NUM_OF_JOBS = 10
 NUM_OF_OPERATIONS_I = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
@@ -13,7 +13,7 @@ NUM_OF_MACHINES = 10
 LAST_OPERATIONS = []
 op_machine = []  # masine se oznacavaju od 1 pa nadalje
 op_duration = []
-colors = ["#494947", "#35ff69", "#44ccff", "#7494ea", "#d138bf", "#3891a6", "#4c5b5c", "#fde74c", "#db5461", "#e8969d",
+colors = ["#35ff69", "#44ccff", "#7494ea", "#d138bf", "#3891a6", "#4c5b5c", "#fde74c", "#db5461", "#e8969d",
           "#95f9e3",
           "#49d49d", "#558564", "#ea638c", "#b33c86", "#190e4f", "#03012c", "#002a22"]
 # cuvamo poslednje operacije svakog posla
