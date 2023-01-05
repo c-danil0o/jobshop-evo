@@ -1,14 +1,12 @@
 import random
-import matplotlib.pyplot as plt
-from collections import defaultdict
 import numpy as np
 
 PROBABILITY_LIST = [2, 1, 2, 2, 0, 0, 0, 0, 0, 0]
 
-SURVIVAL_RATE = 0.1
-MUTATION_RATE = 0.2
+SURVIVAL_RATE = 0.05
+MUTATION_RATE = 0.7
 CROSSOVER_RATE = 0.7
-NUM_OF_GENERATIONS = 100
+NUM_OF_GENERATIONS = 1000
 POPULATION_SIZE = 100
 NUM_OF_JOBS = 10
 NUM_OF_OPERATIONS_I = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
@@ -19,8 +17,8 @@ op_duration = []
 
 # cuvamo poslednje operacije svakog posla
 temp_op = 0
-for i in range(NUM_OF_JOBS):
-    temp_op += NUM_OF_OPERATIONS_I[i]
+for JOB in range(NUM_OF_JOBS):
+    temp_op += NUM_OF_OPERATIONS_I[JOB]
     LAST_OPERATIONS.append(temp_op)
 
 
@@ -104,8 +102,8 @@ def selection(population):
 # uniform i order crossover
 def crossover(children, p1, p2):
     # biranje crossover pointa i provjera da li zadovoljava uslove
-    p1_prim = None
-    p2_prim = None
+    p1_prim = []
+    p2_prim = []
 
     while True:
         fail = False
@@ -220,9 +218,6 @@ def fitness(individual):
 
 
 def mutation(individual):
-    id = 0
-    po = 0
-    x = 0
     # biranje operacije
     while True:
         id = random.randint(0, len(individual) - 1)
@@ -274,6 +269,7 @@ def main():
             if len(new_population) == POPULATION_SIZE:
                 break
         population = new_population
+        print(population[0], fitness(population[0]))
 
     print(population[0], fitness(population[0]))
 
