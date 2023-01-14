@@ -202,7 +202,6 @@ def create_individual():
             for tt in op_machine[operation - 1]:
                 if op_duration[operation - 1][tt - 1] != NO:
                     temp.append(tt)
-            # individual[n] = [operation, op_machine[operation - 1][random.randrange(0, len(op_machine[operation - 1]))]]
             individual[n] = [operation, temp[random.randrange(0, len(temp))]]
             id.remove(n)
             operation += 1  # redom dodajemo operacije jednog posla na random izabrane id-jeve i cuvamo redoslijed
@@ -218,13 +217,6 @@ def generate_population():
 
 def selection(population):
     population.sort(key=lambda x: fitness(x) * random.random())
-
-    # while True:
-    #     id1 = random.randint(0, len(population) - 1)
-    #     id2 = random.randint(0, len(population) - 1)
-    #     if id1 != id2:
-    #         break
-
     return population[0], population[1]
 
 
