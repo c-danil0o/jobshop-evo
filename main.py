@@ -240,7 +240,8 @@ def crossover(children, p1, p2):
         point1 = random.randint(int(np.ceil(get_total_operations() / 2)), len(p1) - 2)
         # point2 = random.randint(point1, len(p1) - 1)
         point2 = random.randint(point1, len(p2) - 1 - (int((1 - CROSSOVER_RATE) * (len(p2) - point1))))
-        sp1 = copy.deepcopy(p1[point1:point2 + 1])
+        # sp1 = copy.deepcopy(p1[point1:point2 + 1])
+        sp1 = p1[point1:point2 + 1]
         for i in range(len(sp1) - 1, -1, -1):
             if sp1[i][0] in LAST_OPERATIONS:
                 checked[get_job(sp1[i][0]) - 1] = True
@@ -249,7 +250,8 @@ def crossover(children, p1, p2):
                     fail = True
                     break
         if not fail:
-            p2_prim = copy.deepcopy(p2)
+            # p2_prim = copy.deepcopy(p2)
+            p2_prim = p2[:]
             # brisanje operacija u p2 koje sadrzi p1 u dijelu od point1 do point2
             for id1 in range(point1, point2 + 1):
                 for id2 in range(len(p2_prim)):
@@ -265,7 +267,8 @@ def crossover(children, p1, p2):
         checked = [False for _ in range(NUM_OF_JOBS)]
         point1 = random.randint(int(np.ceil(get_total_operations() / 2)), len(p2) - 2)
         point2 = random.randint(point1, len(p2) - 1)
-        sp2 = copy.deepcopy(p2[point1:point2 + 1])
+        # sp2 = copy.deepcopy(p2[point1:point2 + 1])
+        sp2 = p2[point1:point2 + 1]
         for i in range(len(sp2) - 1, -1, -1):
             if sp2[i][0] in LAST_OPERATIONS:
                 checked[get_job(sp2[i][0]) - 1] = True
@@ -274,7 +277,8 @@ def crossover(children, p1, p2):
                     fail = True
                     break
         if not fail:
-            p1_prim = copy.deepcopy(p1)
+            # p1_prim = copy.deepcopy(p1)
+            p1_prim = p1[:]
             # brisanje operacija u p2 koje sadrzi p1 u dijelu od point1 do point2
             for id1 in range(point1, point2 + 1):
                 for id2 in range(len(p1_prim)):
@@ -358,6 +362,9 @@ def mutation(individual):
             if (po + 1) != id:
                 x = random.randint(po + 1, id)
                 break
+        else:
+            x = random.randint(0, id)
+            break
 
     # zamjena operacija
     tmp = individual[id]
@@ -462,14 +469,12 @@ def main():
         print("population " + str(counter + 1), fitness(population[0]))
         # elitizam - najbolje jednike prezivljavaju
         for i in range(int(POPULATION_SIZE * SURVIVAL_RATE)):
-            if not i:
-                best_individual = population[i]
             new_population.append(population[i])
 
         while True:
             parent1, parent2 = selection(population)
-            # crossover(new_population, copy.deepcopy(parent1), copy.deepcopy(parent2))
-            crossover(new_population, parent1, parent2)
+            crossover(new_population, copy.deepcopy(parent1), copy.deepcopy(parent2))
+            # crossover(new_population, parent1, parent2)
             if len(new_population) == POPULATION_SIZE:
                 break
         population = new_population
