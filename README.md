@@ -13,9 +13,9 @@ of operations. For the deterministic scheduling problems, the processing time pi
 operation (i, j) is given in advance.
 
 The alghoritm is implemented in python. Parameters for the genetic alghoritm such as number of generations, mutation rate, generation size, etc, can be changed in the source code for different scenarios. 
-Heuristic for finding the best solution is simply total time of all jobs executed on a machine.
+The main heuristic for finding the best solution is simply total time of all jobs executed on a machine.
 Time for each generation is shown at the end of a output line.
-Example of a input data is found in the input file. 
+An example of a input data is found in the input file. 
 Results graph is plotted via matplotlib.
 
 ## Getting Started
